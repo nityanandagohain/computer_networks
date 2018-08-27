@@ -8,10 +8,36 @@
 #include <string.h>
 #include <sys/types.h>
 #include <string.h>
+struct customer{
+	char ip[15];
+	int port;
+	struct customer *next;
+};
+typedef struct customer customer;
+
+void insert_customer(customer **head,char* ip,int port){
+	customer *t1 = (customer *)malloc(sizeof(customer));
+	strcpy(t1->ip,ip);
+	t1->port=port;
+	t1->next = *head;
+	*head = t1;
+}
+
+void display_customers(customer *head){
+	printf("Customers who have done transactions till now");
+	while(head!=NULL){
+		printf("IP: %s PORT: %d\n",head->ip,head->port);
+		head=head->next;
+	}
+	printf("\n");
+}
+
 int main(void)
 {
 	int listenfd = 0,connfd = 0,n=0,num=0; 
 	struct sockaddr_in serv_addr;
+	struct sockaddr_in serv_storage;
+	socklen_t addr_size;
 
 	char sendBuff[1025];
 	char recvBuff[1024];  
@@ -44,8 +70,25 @@ int main(void)
 
 	while(1)
 	{
+		addr_size = sizeof serv_storage;
+		connfd = accept(listenfd, (struct sockaddr*)&serv_storage,&addr_size);	  // accept awaiting request
 
-		connfd = accept(listenfd, (struct sockaddr*)NULL ,NULL);	  // accept awaiting request
+		//identify the client
+		struct sockaddr_in* cliIP = (struct sockaddr_in*)&serv_storage;
+		struct in_addr ipAddr = cliIP->sin_addr;
+		char str[INET_ADDRSTRLEN];
+		inet_ntop(AF_INET, &ipAddr, str, INET_ADDRSTRLEN);
+		char* ID = cliIP->sin_zero;
+		char str2[8];
+		struct customer *x=NULL;
+		inet_ntop(AF_INET, &ID, str2, 8);
+		insert_customer(&x,str,serv_storage.sin_port);
+		//strcpy(x.ip,str);
+		//x.port = serv_storage.sin_port;
+		//printf("\nClient IP is: %s", x.ip);
+		//printf("\nClient port is: %d", x.port);
+
+
 		//read the data send by client
 		num = recv(connfd, recvBuff, sizeof(recvBuff),0);
 		if ( num <= 0 )
@@ -113,6 +156,10 @@ int main(void)
 				printf("Requested quantity of Petrol is not available");
 			}
 		}
+
+		
+		display_customers(x);
+
 		//write the data for client   
 		//fgets(sendBuff,1025,stdin);
 		printf("\nMango\t%d\nOrange\t%d\nGuava\t%d\nPetrol\t%d\n",mango,orange,guava,petrol);
