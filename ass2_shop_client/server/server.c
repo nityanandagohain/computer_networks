@@ -8,6 +8,14 @@
 #include <string.h>
 #include <sys/types.h>
 #include <string.h>
+#include <time.h>
+
+char* gettimestamp(){
+	time_t ltime; //calendar time
+	ltime = time(NULL); //current calendar time
+	//printf("%s",asctime(localtime(&ltime)));
+	return (char *)(asctime(localtime(&ltime)));
+}
 struct customer{
 	char ip[15];
 	int port;
@@ -58,6 +66,7 @@ int main(void)
 	char recvBuff[1024];  
 	int numrv;  
 	int mango=30, orange=30, guava=30, petrol=30 ,sav;
+	char *m_time=NULL,*o_time=NULL,*g_time=NULL,*p_time=NULL;
 	char new1[50];
 	int new,i,j,l;
 	struct customer *x=NULL;
@@ -78,7 +87,7 @@ int main(void)
 		return -1;
 	}
 	printf("\nAvailable items");
-	printf("\nProduct\tQuantity");
+	printf("\nProduct\tQuantity\tLast Transaction");
 	printf("\nMango\t%d", mango);
 	printf("\nOrange\t%d",orange);
 	printf("\nGuava\t%d",guava);
@@ -139,6 +148,8 @@ int main(void)
 			{
 				mango=sav;
 				printf("Requested quantity of Mango is not available");
+			}else{
+				m_time=gettimestamp();
 			}
 		}
 		else if(strcmp(recvBuff,"Orange")==0)
@@ -149,7 +160,9 @@ int main(void)
 			{
 				orange=sav;
 				printf("Requested quantity of Orange is not available");
-			}
+			}else{
+				o_time=gettimestamp();
+				}
 		}
 		else if(strcmp(recvBuff,"Guava")==0)
 		{
@@ -159,7 +172,9 @@ int main(void)
 			{
 				guava=sav;
 				printf("Requested quantity of Guava is not available");
-			}
+			}else{
+				g_time=gettimestamp();
+				}
 		}
 		else if(strcmp(recvBuff,"Petrol")==0)
 		{
@@ -169,15 +184,19 @@ int main(void)
 			{
 				petrol=sav;
 				printf("Requested quantity of Petrol is not available");
-			}
+			}else{
+				p_time=gettimestamp();
+				}
 		}
 
 		printf("\n");
 		display_customers(x);
-		printf("The number of unique customers till now: %d\n",unique_customers);
-		//write the data for client   
-		//fgets(sendBuff,1025,stdin);
-		printf("\nMango\t%d\nOrange\t%d\nGuava\t%d\nPetrol\t%d\n",mango,orange,guava,petrol);
+		//printf("The number of unique customers till now: %d\n",unique_customers);
+
+		//converting unique_customers to string for sending back to client
+		sprintf(sendBuff,"%d",unique_customers);
+
+		printf("\nMango\t%d\t%s\nOrange\t%d\t%s\nGuava\t%d\t%s\nPetrol\t%d\t%s\n",mango,m_time,orange,o_time,guava,g_time,petrol,p_time);
 		if ((send(connfd,sendBuff,strlen(sendBuff),0))== -1) 
 		{
 			fprintf(stderr, "Failure Sending Message\n");

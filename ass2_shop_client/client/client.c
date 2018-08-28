@@ -39,7 +39,7 @@ int main(void)
 	strcat(name,"|");
 	strcat(name,qty);
 	strcpy(sendBuff,name); //Buffer will be eg: Mango|10
-	printf("Sending %s",sendBuff);
+	//printf("Sending %s",sendBuff);
 	if ((send(sockfd,sendBuff,strlen(sendBuff),0))== -1) 
 	{
 		fprintf(stderr, "Failure Sending Message\n");
@@ -56,7 +56,7 @@ int main(void)
 	}
 
 	recvBuff[num] = '\0';
-	// printf("Client:Message Received From Server -  %s\n",recvBuff);
+	printf("\nNo of unique clients from server :  %s\n",recvBuff);
 
 	close(sockfd); 
 	return 0;
