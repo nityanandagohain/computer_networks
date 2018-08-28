@@ -15,7 +15,22 @@ struct customer{
 };
 typedef struct customer customer;
 
+int unique_customers=0;
+
 void insert_customer(customer **head,char* ip,int port){
+	//checking if the new ip is unique
+	customer *t0 = *head;
+	int flag=0;
+	while(t0!=NULL){
+		if(strcmp(ip,t0->ip)==0){
+			flag=1;
+			break;
+		}
+	}
+	if(!flag)
+		unique_customers++;
+
+	//inserting the ip and port to the linked list
 	customer *t1 = (customer *)malloc(sizeof(customer));
 	strcpy(t1->ip,ip);
 	t1->port=port;
@@ -24,7 +39,7 @@ void insert_customer(customer **head,char* ip,int port){
 }
 
 void display_customers(customer *head){
-	printf("Customers who have done transactions till now");
+	printf("Customers who have done transactions till now\n");
 	while(head!=NULL){
 		printf("IP: %s PORT: %d\n",head->ip,head->port);
 		head=head->next;
@@ -45,6 +60,7 @@ int main(void)
 	int mango=30, orange=30, guava=30, petrol=30 ,sav;
 	char new1[50];
 	int new,i,j,l;
+	struct customer *x=NULL;
 	listenfd = socket(AF_INET, SOCK_STREAM, 0);
 	printf("socket retrieve success\n");
 
@@ -80,13 +96,8 @@ int main(void)
 		inet_ntop(AF_INET, &ipAddr, str, INET_ADDRSTRLEN);
 		char* ID = cliIP->sin_zero;
 		char str2[8];
-		struct customer *x=NULL;
 		inet_ntop(AF_INET, &ID, str2, 8);
 		insert_customer(&x,str,serv_storage.sin_port);
-		//strcpy(x.ip,str);
-		//x.port = serv_storage.sin_port;
-		//printf("\nClient IP is: %s", x.ip);
-		//printf("\nClient port is: %d", x.port);
 
 
 		//read the data send by client
@@ -101,6 +112,7 @@ int main(void)
 		i=0;
 		j=0;
 		l=strlen(recvBuff);
+		//seperating the fruit name and the amount
 		while(i<l){
 			if(recvBuff[i]=='|'){
 				recvBuff[i]='\0';
@@ -115,7 +127,10 @@ int main(void)
 			}
 			i++;
 		}
+		//converting the amount to number and storing in new
 		new=atoi(new1);
+
+
 		if(strcmp(recvBuff,"Mango")==0)
 		{
 			sav=mango;
@@ -157,9 +172,9 @@ int main(void)
 			}
 		}
 
-		
+		printf("\n");
 		display_customers(x);
-
+		printf("The number of unique customers till now: %d\n",unique_customers);
 		//write the data for client   
 		//fgets(sendBuff,1025,stdin);
 		printf("\nMango\t%d\nOrange\t%d\nGuava\t%d\nPetrol\t%d\n",mango,orange,guava,petrol);
