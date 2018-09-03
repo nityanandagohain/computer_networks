@@ -10,33 +10,39 @@
 #include <string.h>
 #include <time.h>
 
-char* gettimestamp(){
+void gettimestamp(char arr[]){
 	time_t ltime; //calendar time
 	ltime = time(NULL); //current calendar time
-	//printf("%s",asctime(localtime(&ltime)));
-	return (char *)(asctime(localtime(&ltime)));
+	strcpy(arr,asctime(localtime(&ltime)));
 }
 struct customer{
 	char ip[15];
 	int port;
 	struct customer *next;
 };
+
+struct fruit{
+	int qty;
+	char t_stamp[30];
+	int unique_clients;
+};
+
 typedef struct customer customer;
+typedef struct fruit fruit;
 
-int unique_customers=0;
-
-void insert_customer(customer **head,char* ip,int port){
+void insert_customer(customer **head,char* ip,int port,fruit* f){
 	//checking if the new ip is unique
 	customer *t0 = *head;
 	int flag=0;
 	while(t0!=NULL){
-		if(strcmp(ip,t0->ip)==0){
+		if(strcmp(ip,t0->ip)==0 && t0->port==port){
 			flag=1;
 			break;
 		}
+		t0=t0->next;
 	}
 	if(!flag)
-		unique_customers++;
+		f->unique_clients++;
 
 	//inserting the ip and port to the linked list
 	customer *t1 = (customer *)malloc(sizeof(customer));
@@ -44,6 +50,11 @@ void insert_customer(customer **head,char* ip,int port){
 	t1->port=port;
 	t1->next = *head;
 	*head = t1;
+}
+void setDefault(fruit* f){
+	f->qty=30;
+	f->unique_clients=0;
+	strcpy(f->t_stamp,"");
 }
 
 void display_customers(customer *head){
@@ -57,16 +68,20 @@ void display_customers(customer *head){
 
 int main(void)
 {
-	int listenfd = 0,connfd = 0,n=0,num=0; 
+	int listenfd = 0,connfd = 0,n=0,num=0,sav=0; 
 	struct sockaddr_in serv_addr;
 	struct sockaddr_in serv_storage;
 	socklen_t addr_size;
 
 	char sendBuff[1025];
-	char recvBuff[1024];  
+	char recvBuff[1024];
+	char tempBuff[1024];
 	int numrv;  
-	int mango=30, orange=30, guava=30, petrol=30 ,sav;
-	char *m_time=NULL,*o_time=NULL,*g_time=NULL,*p_time=NULL;
+	fruit mango, orange, guava, lemon;
+	setDefault(&mango);
+	setDefault(&orange);
+	setDefault(&guava);
+	setDefault(&lemon);
 	char new1[50];
 	int new,i,j,l;
 	struct customer *x=NULL;
@@ -88,10 +103,10 @@ int main(void)
 	}
 	printf("\nAvailable items");
 	printf("\nProduct\tQuantity\tLast Transaction");
-	printf("\nMango\t%d", mango);
-	printf("\nOrange\t%d",orange);
-	printf("\nGuava\t%d",guava);
-	printf("\nPetrol\t%d",petrol);
+	printf("\nMango\t%d", mango.qty);
+	printf("\nOrange\t%d",orange.qty);
+	printf("\nGuava\t%d",guava.qty);
+	printf("\nLemon\t%d",lemon.qty);
 
 	while(1)
 	{
@@ -106,7 +121,7 @@ int main(void)
 		char* ID = cliIP->sin_zero;
 		char str2[8];
 		inet_ntop(AF_INET, &ID, str2, 8);
-		insert_customer(&x,str,serv_storage.sin_port);
+		//insert_customer(&x,str,serv_storage.sin_port);
 
 
 		//read the data send by client
@@ -139,64 +154,81 @@ int main(void)
 		//converting the amount to number and storing in new
 		new=atoi(new1);
 
-
+		int f=0;
 		if(strcmp(recvBuff,"Mango")==0)
 		{
-			sav=mango;
-			mango=mango-new;
-			if(mango<0)
+			sav=mango.qty;
+			mango.qty=mango.qty-new;
+			if(mango.qty<0)
 			{
-				mango=sav;
+				mango.qty=sav;
 				printf("Requested quantity of Mango is not available");
 			}else{
-				m_time=gettimestamp();
+				f=1;
+				insert_customer(&x,str,serv_storage.sin_port,&mango);
+				gettimestamp(mango.t_stamp);
+				sprintf(tempBuff,"%d",mango.unique_clients);
 			}
 		}
 		else if(strcmp(recvBuff,"Orange")==0)
 		{
-			sav=orange;
-			orange=orange-new;
-			if(orange<0)
+			sav=orange.qty;
+			orange.qty=orange.qty-new;
+			if(orange.qty<0)
 			{
-				orange=sav;
+				orange.qty=sav;
 				printf("Requested quantity of Orange is not available");
 			}else{
-				o_time=gettimestamp();
-				}
+				f=1;
+				insert_customer(&x,str,serv_storage.sin_port,&orange);
+				gettimestamp(orange.t_stamp);
+				sprintf(tempBuff,"%d",orange.unique_clients);
+			}
 		}
 		else if(strcmp(recvBuff,"Guava")==0)
 		{
-			sav=guava;
-			guava=guava-new;
-			if(guava<0)
+			sav=guava.qty;
+			guava.qty=guava.qty-new;
+			if(guava.qty<0)
 			{
-				guava=sav;
+				guava.qty=sav;
 				printf("Requested quantity of Guava is not available");
 			}else{
-				g_time=gettimestamp();
-				}
+				f=1;
+				insert_customer(&x,str,serv_storage.sin_port,&guava);
+				gettimestamp(guava.t_stamp);
+				sprintf(tempBuff,"%d",guava.unique_clients);
+			}
 		}
-		else if(strcmp(recvBuff,"Petrol")==0)
+		else if(strcmp(recvBuff,"Lemon")==0)
 		{
-			sav=petrol;
-			petrol=petrol-new;
-			if(petrol<0)
+			sav=lemon.qty;
+			lemon.qty=lemon.qty-new;
+			if(lemon.qty<0)
 			{
-				petrol=sav;
-				printf("Requested quantity of Petrol is not available");
+				lemon.qty=sav;
+				printf("Requested quantity of Lemon is not available");
 			}else{
-				p_time=gettimestamp();
-				}
+				f=1;
+				insert_customer(&x,str,serv_storage.sin_port,&lemon);
+				gettimestamp(lemon.t_stamp);
+				sprintf(tempBuff,"%d",lemon.unique_clients);
+			}
 		}
 
 		printf("\n");
-		display_customers(x);
+		if(f){
+			display_customers(x);
+			strcpy(sendBuff,"No of unique clients : ");
+			strcat(sendBuff,tempBuff);
+		}else{
+			strcpy(sendBuff,"Transaction Error");
+		}
 		//printf("The number of unique customers till now: %d\n",unique_customers);
 
 		//converting unique_customers to string for sending back to client
-		sprintf(sendBuff,"%d",unique_customers);
 
-		printf("\nMango\t%d\t%s\nOrange\t%d\t%s\nGuava\t%d\t%s\nPetrol\t%d\t%s\n",mango,m_time,orange,o_time,guava,g_time,petrol,p_time);
+		printf("\nMango\t%d\t%s\nOrange\t%d\t%s\nGuava\t%d\t%s\nLemon\t%d\t%s\n",mango.qty,mango.t_stamp,orange.qty,orange.t_stamp,guava.qty,guava.t_stamp,lemon.qty,lemon.t_stamp);
 		if ((send(connfd,sendBuff,strlen(sendBuff),0))== -1) 
 		{
 			fprintf(stderr, "Failure Sending Message\n");
