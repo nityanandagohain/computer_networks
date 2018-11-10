@@ -103,15 +103,12 @@ int main(void)
 	struct sockaddr_in serv_storage;
 	socklen_t addr_size;
 
-	char sendBuff[1025];
-	char recvBuff[1024];
 	int new,i,j,l;
 	struct user *x=NULL;
 	listenfd = socket(AF_INET, SOCK_STREAM, 0);
 	printf("socket retrieve success\n");
 
 	memset(&serv_addr, '0', sizeof(serv_addr));
-	memset(sendBuff, '0', sizeof(sendBuff));
 
 	serv_addr.sin_family = AF_INET;    
 	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY); 
@@ -129,6 +126,9 @@ int main(void)
 
 	while(1)
 	{
+		char sendBuff[1025];
+		char recvBuff[1024];
+		memset(sendBuff, '0', sizeof(sendBuff));
 		printf("\nSTART\n");
 		addr_size = sizeof serv_storage;
 		connfd = accept(listenfd, (struct sockaddr*)&serv_storage,&addr_size);
@@ -141,16 +141,17 @@ int main(void)
 		char* ID = cliIP->sin_zero;
 		char str2[8];
 		inet_ntop(AF_INET, &ID, str2, 8);
-		
+
 		//read the data send by client
 		num = recv(connfd, recvBuff, sizeof(recvBuff),0);
 		if ( num <= 0 )
 		{
 			printf("Either Connection Closed or Error\n");
+			continue;
 
 		}
 		printf("recieved : %s",recvBuff);
-		
+
 		//Parsing and getting result
 		int result = parse_and_return_result(recvBuff);
 		if(result == -1 ){
@@ -169,7 +170,6 @@ int main(void)
 			break;
 		}
 		close(connfd); 
-		sleep(1);
 	}
 	return 0;
 }
