@@ -1,8 +1,14 @@
-#include <stdio.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
+#include <netdb.h>
+#include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <arpa/inet.h>
+
 
 int main(){
 	int welcome_socket,new_socket;
@@ -20,15 +26,12 @@ int main(){
 
 	//binding the address to socket
 	bind(welcome_socket, (struct sockaddr *) &s_address, sizeof(s_address));
-
-
 	//Listen to 5 client at max
 	if(listen(welcome_socket, 5) ==0){
 		printf("Listening\n");
 	}else{
 		printf("Error\n");
 	}
-
 	while(1){
 		addr_size = sizeof s_storage;
 		new_socket = accept(welcome_socket, (struct sockaddr *) &s_storage, & addr_size);
@@ -45,13 +48,6 @@ int main(){
 		for(i=0;i<8;i++){
 			printf("%c",s_storage.sin_zero[i]);
 		}
-
-		if(strcmp(buffer,"hi")==0){
-			send(new_socket,"hello",23,0);
-		}else{
-			send(new_socket,"send message",23,0);
-		}
-
 		while(1){
 			recv(new_socket, buffer, 1024, 0);
 
@@ -62,6 +58,7 @@ int main(){
 			}
 			printf("-----");
 		}
+		close(new_socket);
 	}
 	return 0;
 }
